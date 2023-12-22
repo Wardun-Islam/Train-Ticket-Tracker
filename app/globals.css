@@ -25,3 +25,18 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+div .react-datepicker__view-calendar-icon input{
+  width: 100%;
+  border: 1px solid hsl(0, 0%, 80%);
+  border-radius: 4px;
+  padding-left: 30px;
+}
+
+.react-datepicker-wrapper{
+  width: 100%;
+}
+
+.react-datepicker__input-container .react-datepicker__calendar-icon{
+  height: 1.3em;
+}
