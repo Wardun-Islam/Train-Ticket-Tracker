@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
-import moment from "moment";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { cities } from "./constants/constants";
@@ -70,12 +69,11 @@ export default function Home() {
         <p className="text-black py-2">Date: </p>
         <DatePicker
           dateFormat="dd/MM/yyyy"
-          toggleCalendarOnIconClick
           showIcon
           selected={selectedDate}
           onChange={(date: any) => setSelectedDate(date)}
           minDate={minDate}
-          maxDate={maxDate}
+          maxDate={new Date(maxDate)}
         />
         <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full mt-3">
           Search
