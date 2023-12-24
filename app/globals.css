@@ -31,6 +31,7 @@ div .react-datepicker__view-calendar-icon input{
   border: 1px solid hsl(0, 0%, 80%);
   border-radius: 4px;
   padding-left: 30px;
+  color: black;
 }
 
 .react-datepicker-wrapper{
