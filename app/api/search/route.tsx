@@ -165,8 +165,11 @@ function getStream(request: Request) {
                           const spinner = ["-", "\\", "|", "/"];
                           const index = k % 4;
                           // clear the current line
-                          process.stdout.clearLine(0);
-                          process.stdout.write(
+                          // process.stdout.clearLine(0);
+                          // process.stdout.write(
+                          //   `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
+                          // );
+                          console.log(
                             `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
                           );
                           controller.enqueue(
