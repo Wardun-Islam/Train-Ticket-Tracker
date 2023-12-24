@@ -215,7 +215,6 @@ export default function Home() {
             return;
           } else {
             setErrorMessage("");
-            // post to server
             // redirect to search
             window.location.href =
               "/search?fromcity=" +

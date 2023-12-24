@@ -162,19 +162,22 @@ function getStream(request: Request) {
                         `/booking/train/search/en?fromcity=${station_pair.fromcity}&tocity=${station_pair.tocity}&doj=${station_pair.doj}&class=S_CHAIR`
                       )
                         .then(async (response: any) => {
-                          const spinner = ["-", "\\", "|", "/"];
-                          const index = k % 4;
+                          // const spinner = ["-", "\\", "|", "/"];
+                          // const index = k % 4;
                           // clear the current line
                           // process.stdout.clearLine(0);
                           // process.stdout.write(
                           //   `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
                           // );
+                          // console.log(
+                          //   `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
+                          // );
                           console.log(
-                            `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
+                            `✓ Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
                           );
                           controller.enqueue(
                             JSON.stringify(
-                              `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
+                              `✓ Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
                             )
                           );
                           const available_train_html = response.data;
@@ -240,27 +243,32 @@ function getStream(request: Request) {
                               }
                             })
                             .catch((error) => {
+                              controller.close();
                               console.error("Error fetching data:", error);
                             });
                         })
                         .catch((error) => {
+                          controller.close();
                           console.error("Error fetching data:", error);
                         });
                     }
                     available_train_list[i].station_pairs = station_pairs;
                   })
                   .catch((error) => {
+                    controller.close();
                     console.error("Error fetching data:", error);
                   });
               }
             })
             .catch((error) => {
+              controller.close();
               console.error("Error fetching data:", error);
             });
           // controller.enqueue(json(available_train_list));
           controller.close();
         })
         .catch((error) => {
+          controller.close();
           console.error("Error fetching data:", error);
         });
     },
