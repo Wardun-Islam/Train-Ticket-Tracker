@@ -60,21 +60,34 @@ function getStream(request: Request) {
         withCredentials: true,
       });
 
-      let setCookies = false;
-
       // Function to handle requests with session-like behavior
       async function makeSessionRequest(url: string) {
-        try {
-          const response = await instance.get(url);
+        const maxRetries = 1000; // Maximum number of retries
+        let retries = 0;
 
-          const receivedCookies = response.headers["set-cookie"];
-          if (receivedCookies && !setCookies) {
-            instance.defaults.headers.Cookie = receivedCookies[0];
-            setCookies = true;
+        while (retries < maxRetries) {
+          try {
+            const response = await instance.get(url);
+
+            const receivedCookies = response.headers["set-cookie"];
+            if (receivedCookies) {
+              instance.defaults.headers.Cookie = receivedCookies[0];
+            }
+            if (response && response.status === 200) {
+              return response;
+            } else if (response && response.status === 500) {
+              console.log(`Retrying (${retries + 1}/${maxRetries})...`);
+              retries++;
+            }
+          } catch (error: any) {
+            if (error.response && error.response.status === 500) {
+              console.log(`Retrying (${retries + 1}/${maxRetries})...`);
+              retries++;
+            } else {
+              // If it's not a 500 error, throw the error immediately
+              throw error;
+            }
           }
-          return response;
-        } catch (error) {
-          console.error("Error:", error);
         }
       }
 
@@ -106,7 +119,7 @@ function getStream(request: Request) {
                   .text();
                 const train_id = extractDigitsAsNumber(train_name);
                 available_train_list.push({ train_name, train_id });
-
+                controller.enqueue(JSON.stringify({ train_name: train_name }));
                 await makeSessionRequest(
                   "/booking/trip/" + train_id + "/details"
                 )
@@ -155,6 +168,12 @@ function getStream(request: Request) {
                       station_list.push({ station_name, station_date });
                     }
                     available_train_list[i].station_list = station_list;
+                    const station_name_list = station_list.map(
+                      (station: any) => station.station_name
+                    );
+                    controller.enqueue(
+                      JSON.stringify({ station_list: station_name_list })
+                    );
                     const station_pairs = generatePairs(station_list);
                     for (let k = 0; k < station_pairs.length; k++) {
                       const station_pair = station_pairs[k];
@@ -172,9 +191,6 @@ function getStream(request: Request) {
                           // console.log(
                           //   `\r${spinner[index]} Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
                           // );
-                          console.log(
-                            `✓ Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
-                          );
                           controller.enqueue(
                             JSON.stringify(
                               `✓ Searching for ${station_pair.fromcity} to ${station_pair.tocity} on ${station_pair.doj} in ${train_name}`
@@ -239,6 +255,16 @@ function getStream(request: Request) {
                                         parseInt(seat_available, 10);
                                     }
                                   }
+                                  controller.enqueue(
+                                    JSON.stringify({
+                                      seat_data: {
+                                        station1: station_pair.fromcity,
+                                        station2: station_pair.tocity,
+                                        available_seat:
+                                          station_pair.available_seat,
+                                      },
+                                    })
+                                  );
                                 }
                               }
                             })
@@ -269,7 +295,7 @@ function getStream(request: Request) {
         })
         .catch((error) => {
           controller.close();
-          console.error("Error fetching data:", error);
+          console.error("Error fetching data 1:", error);
         });
     },
   });

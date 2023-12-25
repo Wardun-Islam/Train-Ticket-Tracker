@@ -1,8 +1,12 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
+import StationDistanceTable from "./components/table";
 
 export default function Search() {
   const [data, setData] = useState<any>([]);
+  const [trainName, setTrainName] = useState<any>([]);
+  const [distanceData, setDistanceData] = useState<any>([]);
+  const [stations, setStations] = useState<any>([]);
   let useEffectCalled = false;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -15,7 +19,6 @@ export default function Search() {
   useEffect(() => {
     if (typeof window !== "undefined" && !useEffectCalled) {
       useEffectCalled = true;
-      console.log("useEffectCalled", useEffectCalled);
       const params = new URLSearchParams(window.location.search);
       const fromcity = params.get("fromcity");
       const tocity = params.get("tocity");
@@ -43,7 +46,6 @@ export default function Search() {
                 reader.read().then(({ done, value }: any) => {
                   // If there is no more data to read
                   if (done) {
-                    console.log("done", done);
                     controller.close();
                     return;
                   }
@@ -51,18 +53,36 @@ export default function Search() {
                   controller.enqueue(value);
                   // Check chunks by logging to the console
                   try {
-                    console.log(
-                      done,
-                      JSON.parse(new TextDecoder().decode(value))
-                    );
-                    if (
-                      typeof JSON.parse(new TextDecoder().decode(value)) ===
-                      "string"
-                    )
-                      setData((prev: any) => [
+                    const value1 = JSON.parse(new TextDecoder().decode(value));
+
+                    if (value1.train_name) {
+                      setTrainName((prev: any) => [...prev, value1.train_name]);
+                    } else if (value1.station_list) {
+                      setStations((prev: any) => [
                         ...prev,
-                        JSON.parse(new TextDecoder().decode(value)),
+                        value1.station_list,
                       ]);
+                    } else if (value1.seat_data) {
+                      setDistanceData((prev: any) => {
+                        const updatedData = [...prev];
+                        const updatedData1 = {
+                          ...updatedData[updatedData.length - 1],
+                        };
+                        updatedData1[value1.seat_data.station1] =
+                          updatedData1[value1.seat_data.station1] || {};
+                        updatedData1[value1.seat_data.station1][
+                          value1.seat_data.station2
+                        ] = value1.seat_data.available_seat;
+                        if (updatedData.length > 0) {
+                          updatedData[updatedData.length - 1] = updatedData1;
+                        } else {
+                          updatedData.push(updatedData1);
+                        }
+                        return updatedData;
+                      });
+                    } else {
+                      setData((prev: any) => [...prev, value1]);
+                    }
                   } catch (e) {
                     console.log(e);
                   }
@@ -90,18 +110,40 @@ export default function Search() {
   }, []);
 
   return (
-    <div className="bg-gray-900 text-white rounded-lg p-4 m-4">
-      <h2 className="text-xl font-bold mb-4">Searching train</h2>
-      <div
-        ref={containerRef}
-        className="border border-gray-600 rounded-md p-2 mb-2 min-h-32 md:min-h-48 lg:min-h-64 max-h-80 overflow-y-auto"
-      >
-        {data.map((item: any, index: any) => (
-          <div key={index} className="font-mono py-1">
-            {item}
+    <div className="container mx-auto p-4">
+      <div className="bg-gray-900 text-white rounded-lg p-4 m-4">
+        <h2 className="text-xl font-bold mb-4">
+          {trainName.length > 0
+            ? `Searching train ${trainName[trainName.length - 1]}`
+            : "Initializing search..."}
+        </h2>
+        <div
+          ref={containerRef}
+          className="border border-gray-600 rounded-md p-2 mb-2 min-h-32 md:min-h-48 lg:min-h-64 max-h-80 overflow-y-auto"
+        >
+          {data.map((item: any, index: any) => (
+            <div key={index} className="font-mono py-1">
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {stations.length > 0 &&
+        stations.map((item: any, index: any) => (
+          <div
+            key={index}
+            className="bg-gray-900 text-white rounded-lg p-4 m-4"
+          >
+            <h2 className="text-xl font-bold mb-4">{`${trainName[index]} Stations`}</h2>
+            <div className="border border-gray-600 rounded-md p-2 mb-2 overflow-x-auto">
+              <StationDistanceTable
+                stations={item}
+                distanceData={distanceData[index] ? distanceData[index] : {}}
+              />
+            </div>
           </div>
         ))}
-      </div>
     </div>
   );
 }
