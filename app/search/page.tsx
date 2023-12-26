@@ -62,6 +62,7 @@ export default function Search() {
                         ...prev,
                         value1.station_list,
                       ]);
+                      setDistanceData((prev: any) => [...prev, {}]);
                     } else if (value1.seat_data) {
                       setDistanceData((prev: any) => {
                         const updatedData = [...prev];
